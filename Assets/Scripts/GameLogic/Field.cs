@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Helpers;
 using UnityEngine;
@@ -14,6 +15,12 @@ namespace Assets.Scripts.GameLogic
         private GridLayoutGroup grid;
         [SerializeField]
         private GameObject pullContainer;
+        [SerializeField]
+        private Button locker;
+        [SerializeField]
+        private ResultScreen result;
+
+
 
         private List<Cell> cells = new List<Cell>(); 
         private GameObjectPull<Cell> cellsPull; 
@@ -21,6 +28,11 @@ namespace Assets.Scripts.GameLogic
 
         private int correctsCount;
         private int openedCount;
+        private bool isPaused;
+        private IEnumerator correctCoroutine;
+        private int level;
+        private int score;
+
 
         private void Awake()
         {
@@ -29,19 +41,29 @@ namespace Assets.Scripts.GameLogic
 
         private void Start()
         {
+            level = 1;
+            score = 0;
             correctsCount = 3;
             StartNewGame(3, 3);
         }
 
+        public void ReplayCurrent()
+        {
+            if (isPaused) return;
+            StartNewGame(matrix.GetLength(0), matrix.GetLength(1));
+        }
+
         public void NextRound()
         {
+            if (isPaused) return;
             int n = matrix.GetLength(0);
             int m = matrix.GetLength(1);
             correctsCount ++;
+            level++;
             if (n*m/2 <= correctsCount)
             {
-                if (n == m) m++;
-                else n++;
+                m++;
+                n++;
             }
 
             StartNewGame(n, m);
@@ -53,6 +75,7 @@ namespace Assets.Scripts.GameLogic
             grid.constraintCount = m;
             PlaceCells();
             ShowCorrects();
+            isPaused = false;
         }
 
         public void PlaceCells()
@@ -76,37 +99,64 @@ namespace Assets.Scripts.GameLogic
 
         public void ShowCorrects()
         {
-            StartCoroutine(showCorrectCoroutine());
+            if (correctCoroutine != null)
+            {
+                StopCoroutine(correctCoroutine);
+            }
+            correctCoroutine = showCorrectCoroutine();
+            StartCoroutine(correctCoroutine);
         }
 
         
 
         public void OnCorrectCellChecked()
         {
+            if (isPaused) return;
             openedCount++;
             if (openedCount >= correctsCount)
-                EndRound();
+            {
+                StartCoroutine(endGameCoroutine(true));
+            }
         }
 
-        public void OnWrongCellChecked()
+        public void OnWrongCellChecked()    
         {
+            if (isPaused) return;
             Debug.Log("Fail");
             setAllCorrectsState(true);
+            StartCoroutine(endGameCoroutine(false));
         }
 
-        public void EndRound()
+        private IEnumerator endGameCoroutine(bool success)
         {
-            Debug.Log("Success");
+            isPaused = true;
+            yield return new WaitForSeconds(0.5f);
+            if (success) calculateScore();
+            result.Show(success, level, score);
+            locker.gameObject.SetActive(true);
+            yield return new WaitForSeconds(1);
+            isPaused = false;
+            if (success)
+            {
+                NextRound();
+            }
+            else
+            {
+                ReplayCurrent();
+            }
         }
 
         private IEnumerator showCorrectCoroutine()
         {
+            locker.gameObject.SetActive(true);
             setAllCorrectsState(true);
-
+            yield return new WaitForEndOfFrame();
+            result.Hide();
 
             yield return new WaitForSeconds(2f);
 
             setAllCorrectsState(false);
+            locker.gameObject.SetActive(false);
 
         }
 
@@ -126,6 +176,10 @@ namespace Assets.Scripts.GameLogic
             cell.gameObject.SetActive(true);
             cell.UpdateData(isCorrect, this);
             cells.Add(cell);
+        }
+        private void calculateScore()
+        {
+            score += correctsCount;
         }
     }
 }

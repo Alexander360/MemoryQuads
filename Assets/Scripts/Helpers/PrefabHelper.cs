@@ -28,7 +28,7 @@ namespace Assets.Helpers
 
         public static void AppendTo(this GameObject go, GameObject parent)
         {
-            go.transform.parent = parent.transform;
+            go.transform.SetParent(parent.transform, false);
             go.transform.localScale = Vector3.one;
             go.gameObject.layer = parent.layer;
         }

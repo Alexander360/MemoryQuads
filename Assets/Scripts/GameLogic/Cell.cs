@@ -10,7 +10,7 @@ namespace Assets.Scripts.GameLogic
         private Field field;
         private bool isCorrect;
         private bool internalChange;
-
+        private bool wasPressed;
         public bool IsCorrect
         {
             get { return isCorrect; }
@@ -19,6 +19,7 @@ namespace Assets.Scripts.GameLogic
         private void Awake()
         {
             toggle = GetComponent<Toggle>();
+            toggle.onValueChanged.AddListener(onToggle);
         }
 
         public void UpdateData(bool isCorrect, Field field)
@@ -26,8 +27,8 @@ namespace Assets.Scripts.GameLogic
             this.isCorrect = isCorrect;
             this.field = field;
             toggle.graphic.color = isCorrect ? Color.green : Color.red;
-            toggle.isOn = false;
-            toggle.onValueChanged.AddListener(onToggle);
+            toggle.interactable = true;
+            Toggle(false);
         }
 
         public void Toggle(bool on)
@@ -40,7 +41,7 @@ namespace Assets.Scripts.GameLogic
         private void onToggle(bool isOn)
         {
             if (internalChange) return;
-            Debug.Log("toggle " + isOn);
+            toggle.interactable = false;
             if (IsCorrect)
             {
                 field.OnCorrectCellChecked();
