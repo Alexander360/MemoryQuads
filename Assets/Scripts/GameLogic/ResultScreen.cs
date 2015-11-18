@@ -9,7 +9,7 @@ namespace Assets.Scripts.GameLogic
         [SerializeField]
         private Text scoreLabel;
         [SerializeField]
-        private Text levelLabel;
+        private Text dailyScoreLabel;
 
         public void Show(bool isVictory, int level, int score)
         {
@@ -22,7 +22,7 @@ namespace Assets.Scripts.GameLogic
             {
                 result.text = "Fail!";
             }
-            levelLabel.text = level.ToString();
+            dailyScoreLabel.text = score.ToString();
             scoreLabel.text = score.ToString();
         }
 

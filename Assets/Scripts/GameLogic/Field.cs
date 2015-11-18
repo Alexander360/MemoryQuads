@@ -19,6 +19,12 @@ namespace Assets.Scripts.GameLogic
         private Button locker;
         [SerializeField]
         private ResultScreen result;
+        [SerializeField]
+        private Text leftCellsLabel;
+        [SerializeField]
+        private Text currentLevelLabel;
+
+
 
 
 
@@ -30,9 +36,28 @@ namespace Assets.Scripts.GameLogic
         private int openedCount;
         private bool isPaused;
         private IEnumerator correctCoroutine;
-        private int level;
+        private int currentLevel;
         private int score;
 
+        public int OpenedCount
+        {
+            get { return openedCount; }
+            set 
+            { 
+                openedCount = value;
+                leftCellsLabel.text = (correctsCount - openedCount).ToString();
+            }
+        }
+
+        public int CurrentLevel
+        {
+            get { return currentLevel; }
+            set
+            {
+                currentLevel = value;
+                currentLevelLabel.text = currentLevel.ToString();
+            }
+        }
 
         private void Awake()
         {
@@ -41,7 +66,7 @@ namespace Assets.Scripts.GameLogic
 
         private void Start()
         {
-            level = 1;
+            CurrentLevel = 1;
             score = 0;
             correctsCount = 3;
             StartNewGame(3, 3);
@@ -59,7 +84,7 @@ namespace Assets.Scripts.GameLogic
             int n = matrix.GetLength(0);
             int m = matrix.GetLength(1);
             correctsCount ++;
-            level++;
+            CurrentLevel++;
             if (n*m/2 <= correctsCount)
             {
                 m++;
@@ -86,7 +111,7 @@ namespace Assets.Scripts.GameLogic
             }
             cells.Clear();
            
-            openedCount = 0;
+            OpenedCount = 0;
 
             for (int i = 0; i < matrix.GetLength(0); i++)
             {
@@ -112,8 +137,8 @@ namespace Assets.Scripts.GameLogic
         public void OnCorrectCellChecked()
         {
             if (isPaused) return;
-            openedCount++;
-            if (openedCount >= correctsCount)
+            OpenedCount++;
+            if (OpenedCount >= correctsCount)
             {
                 StartCoroutine(endGameCoroutine(true));
             }
@@ -132,10 +157,12 @@ namespace Assets.Scripts.GameLogic
             isPaused = true;
             yield return new WaitForSeconds(0.5f);
             if (success) calculateScore();
-            result.Show(success, level, score);
+            result.Show(success, CurrentLevel, score);
+            leftCellsLabel.gameObject.SetActive(false);
             locker.gameObject.SetActive(true);
-            yield return new WaitForSeconds(1);
             isPaused = false;
+            /*yield return new WaitForSeconds(1);
+           
             if (success)
             {
                 NextRound();
@@ -143,7 +170,7 @@ namespace Assets.Scripts.GameLogic
             else
             {
                 ReplayCurrent();
-            }
+            }*/
         }
 
         private IEnumerator showCorrectCoroutine()
@@ -151,12 +178,15 @@ namespace Assets.Scripts.GameLogic
             locker.gameObject.SetActive(true);
             setAllCorrectsState(true);
             yield return new WaitForEndOfFrame();
+            isPaused = true;
             result.Hide();
 
             yield return new WaitForSeconds(2f);
 
             setAllCorrectsState(false);
             locker.gameObject.SetActive(false);
+            leftCellsLabel.gameObject.SetActive(true);
+            isPaused = false;
 
         }
 
