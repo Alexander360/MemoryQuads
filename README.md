@@ -6,4 +6,6 @@ On level start part of quads became green. After few seconds they all become whi
 You should remember where the green quads were and tap on all their positons.
 
 Sample screen:
+
+
 ![Game screen](/screens/Memory_2.png)
